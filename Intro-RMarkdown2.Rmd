@@ -1,0 +1,51 @@
+---
+title: "Intro_RMarkdown2"
+author: "Jalene LaMontagne"
+date: "2/25/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr) #put all libraries at the top
+```
+
+## Introduction
+
+* read in and reference data source
+
+```{r read-data, message = FALSE}
+bg_chem<-read_csv("BGchem2008data.csv")
+```
+
+## Analysis
+
+* calculate basic summary statistics
+ - mean NO3
+ - mean NO2
+ - mean NH4
+ - mean P
+
+```{r, message=FALSE}
+(meanNO3<-mean(bg_chem$NO3))
+(meanNO2<-mean(bg_chem$NO2))
+(meanNH4<-mean(bg_chem$NH4))
+(meanP<-mean(bg_chem$P))
+```
+
+* calculate mean redfield ratio
+```{r}
+red<-(meanNO3+meanNO2+meanNH4)/meanP
+```
+
+We calculated the Redfield ratio to be `r round(red,2)`.
+
+* plot redfield ratio
+```{r, echo = FALSE}
+plot(bg_chem$P,bg_chem$NO2 + bg_chem$NO3 + bg_chem$NH4)
+
+```
+
