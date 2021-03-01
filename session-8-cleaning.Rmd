@@ -1,0 +1,114 @@
+---
+title: "Data Cleaning"
+author: "Jalene LaMontagne"
+date: "3/1/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+library(dplyr)
+library(tidyr)
+library(readr)
+```
+
+```{r} 
+# note: the below command line is read_csv (read.csv can't do this)
+# these are great ways to use archived data on knb - this ensures 
+# that it's not modified at all 
+catch_original<-read_csv("https://knb.ecoinformatics.org/knb/d1/mn/v2/object/df35b.302.1")
+```  
+
+```{r}
+#there are some extraneous columns, select all the relevant ones - a few different
+#ways to get the same answer (to keep 7 columns) are below
+#catch_data <- catch_original %>%
+#  select(Region, Year, Chinook, Sockeye, Coho, Pink, Chum)
+#catch_data <- catch_original %>%
+#  select(Region:Chum)  #Filters to keep all the columns between Region and Chum
+catch_data <- catch_original %>%
+  select(-All, -notesRegCode) #Filters out two of the columns
+
+summary(catch_data) #This showed us a problem with Chinook - it was a char and should be #num
+```
+
+```{r}
+# Fixing the issue with the Chinook column
+catch_clean <- catch_data %>%
+  mutate(Chinook = as.numeric(Chinook))
+#note: this is basically the same as as.numeric(catch_data$Chinook)
+```
+```{r}
+#This is stuff we ran in base r - just adding here to remember
+ i <- which(is.na(catch_clean$Chinook))
+ i #row 401 has the NA
+ catch_clean[i,] #view the row in catch_clean
+ catch_data[i,] #view the row in the raw data - see there's an I instead of a 1
+```
+
+```{r}
+#Fixing the value in the above chunk
+catch_clean <- catch_data %>%
+    mutate(Chinook = ifelse(Chinook == "I", 1, Chinook)) %>%
+    mutate(Chinook = as.numeric(Chinook))
+```
+
+```{r}
+#Transform from wide to tall
+catch_long <-catch_clean %>%
+  pivot_longer(cols = -c(Region, Year), names_to = "species", values_to = "catch")
+#Note, this means: cols is what to retain for each of the rows, names_to is old column 
+#names, values to = the values that were in each of the cells for the column names
+catch_long
+
+#Just practising with the opposite
+catch_wide <-catch_long %>%
+  pivot_wider(names_from = species, values_from = catch) #Doesn't seem to need quotes
+# this takes the Species column to make separate columns, and the catch column becomes the 
+# data in those Species columns
+catch_wide
+```
+
+``` {R}
+catch_long <-catch_long %>%
+  rename(catch_thousands = catch) #this renames the column catch to catch_thousands 
+  #use this when the metadata indicate the scale of the data
+
+catch_long <- catch_long %>%
+  mutate(catch = catch_thousands * 1000) %>%  
+  select(-catch_thousands)
+
+#make a new column (bc we got rid of catchabove)
+#say, now we want to get rid of catch_thousands
+
+```
+
+```{R}
+mean_region <-catch_long %>%
+  group_by(Region) %>%
+  summarise(catch_mean = mean(catch)) %>%
+  arrange(desc(catch_mean)) #NOTE: use arrange to sort....NOT sort. desc = descending   #order
+
+n_region <-catch_long %>%
+  group_by(Region) %>%
+  summarise(n = n())
+```
+
+```{R}
+SSE_catch <-catch_long %>%
+  filter(Region == "SSE") #double equals tests for equality
+table(SSE_catch$Region) #Will tell us how many values there are
+```
+
+
+``` {R}
+region_defs <- read_csv("https://knb.ecoinformatics.org/knb/d1/mn/v2/object/df35b.303.1") %>% 
+    select(code, mgmtArea)
+
+catch_joined <- left_join(catch_long, region_defs, by = c("Region" = "code"))
+catch_joined
+
+```
