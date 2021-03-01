@@ -4,3 +4,8 @@ output: html_document
 ---
 
 Hello
+
+The modules I've gotten through:
+
+- [Session 8: Data Cleaning](session-8-cleaning.html)
+- [RMarkdown Introduction](Intro-RMarkdown2.html)
