@@ -2,3 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
+
+Intro-RMarkdown.Rmd/
+Intro_RMarkdown.html/
+Intro_RMarkdown.log/
+Intro_RMarkdown.tex/
+shapefiles/
